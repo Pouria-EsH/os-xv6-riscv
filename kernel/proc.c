@@ -321,6 +321,12 @@ fork(void)
   acquire(&np->lock);
   np->state = RUNNABLE;
   release(&np->lock);
+  
+  acquire(&np->lock);
+  acquire(&tickslock);
+  np->starttick = ticks;
+  release(&tickslock);
+  release(&np->lock);
 
   return pid;
 }
@@ -620,6 +626,31 @@ killed(struct proc *p)
   k = p->killed;
   release(&p->lock);
   return k;
+}
+
+int 
+getProcTick(int pid)
+{
+  uint aticks = -1;
+  uint pticks;  
+
+  struct proc* p;
+
+  for(p = proc; p < &proc[NPROC]; p++)
+  {
+    acquire(&p->lock); 
+    if(p->pid == pid && p->state != UNUSED)
+    {
+      pticks = p->starttick;
+
+      acquire(&tickslock);
+      aticks = ticks - pticks;
+      release(&tickslock);
+    }
+    release(&p->lock);
+  }
+
+  return aticks;
 }
 
 // Copy to either a user address, or kernel address,
