@@ -653,6 +653,50 @@ getProcTick(int pid)
   return aticks;
 }
 
+long 
+infouptime()
+{
+  uint xticks;
+
+  acquire(&tickslock);
+  xticks = ticks;
+  release(&tickslock);
+
+  return (long)(xticks * 0.1);
+}
+
+uint 
+infototalram()
+{
+  return 0;
+}
+
+uint
+infofreeram()
+{
+  return 0;
+}
+
+short
+infoallprocs()
+{
+  return 0;
+}
+
+int
+systeminfo(uint64 info)
+{
+  struct sysinfo si;
+  struct proc *p = myproc();
+  si.uptime = infouptime();
+  si.totalram = infototalram(); 
+  si.freeram = infofreeram();
+  si.procs = infoallprocs();
+  if (info != 0 && copyout(p->pagetable,info,(char*)&si,sizeof(si)) < 0)
+    return -1;
+  return 0;
+}
+
 // Copy to either a user address, or kernel address,
 // depending on usr_dst.
 // Returns 0 on success, -1 on error.
