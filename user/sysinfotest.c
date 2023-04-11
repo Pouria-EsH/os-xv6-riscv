@@ -8,12 +8,15 @@ struct sysinfo {
   unsigned short procs;
 };
 
+
 int main(void){
     struct sysinfo sysi;
     int ret = sysinfo(&sysi);
-    printf("uptime: %d \n", sysi.uptime);
-    // printf("totalram: %d \n", sysi.freeram);
-    // printf("freeram: %d \n", sysi.freeram);
-    // printf("procs: %d \n", sysi.procs);
+
+    printf("uptime:   %d Sec\n", sysi.uptime);
+    printf("totalram: %d KB\n", sysi.totalram / 1000);
+    printf("freeram:  %d KB\n", sysi.freeram / 1000);
+    printf("procs:    %d \n", sysi.procs);
+
     return ret;
 }

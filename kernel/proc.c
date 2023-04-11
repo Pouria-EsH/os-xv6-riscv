@@ -665,23 +665,28 @@ infouptime()
   return (long)(xticks * 0.1);
 }
 
-uint 
+uint64 
 infototalram()
 {
-  return 0;
-}
-
-uint
-infofreeram()
-{
-  return 0;
+  return PHYSTOP - KERNBASE;
 }
 
 short
 infoallprocs()
 {
-  return 0;
+  short pcount = 0;
+  struct proc* p;
+
+  for(p = proc; p < &proc[NPROC]; p++)
+  {
+    if(p->state != UNUSED)
+      pcount++;
+  }
+
+  return pcount;
 }
+
+uint infofreeram();
 
 int
 systeminfo(uint64 info)
