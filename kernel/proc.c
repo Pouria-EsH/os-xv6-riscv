@@ -145,6 +145,11 @@ found:
   memset(&p->context, 0, sizeof(p->context));
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
+  
+  // Save system ticks
+  acquire(&tickslock);
+  p->starttick = ticks;
+  release(&tickslock);
 
   return p;
 }
@@ -320,12 +325,6 @@ fork(void)
 
   acquire(&np->lock);
   np->state = RUNNABLE;
-  release(&np->lock);
-  
-  acquire(&np->lock);
-  acquire(&tickslock);
-  np->starttick = ticks;
-  release(&tickslock);
   release(&np->lock);
 
   return pid;
