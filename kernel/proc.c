@@ -15,6 +15,8 @@ struct proc *initproc;
 int nextpid = 1;
 struct spinlock pid_lock;
 
+sched_algorithms sched_type  = ALG_FCFS;
+
 extern void forkret(void);
 static void freeproc(struct proc *p);
 
@@ -439,25 +441,12 @@ wait(uint64 addr)
   }
 }
 
-// Per-CPU process scheduler.
-// Each CPU calls scheduler() after setting itself up.
-// Scheduler never returns.  It loops, doing:
-//  - choose a process to run.
-//  - swtch to start running that process.
-//  - eventually that process transfers control
-//    via swtch back to the scheduler.
 void
-scheduler(void)
+rr_scheduler(struct cpu *c)
 {
+  // printf("using rr..\n");
   struct proc *p;
-  struct cpu *c = mycpu();
-  
-  c->proc = 0;
-  for(;;){
-    // Avoid deadlock by ensuring that devices can interrupt.
-    intr_on();
-
-    for(p = proc; p < &proc[NPROC]; p++) {
+  for(p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
       if(p->state == RUNNABLE) {
         // Switch to chosen process.  It is the process's job
@@ -472,6 +461,65 @@ scheduler(void)
         c->proc = 0;
       }
       release(&p->lock);
+    }
+}
+
+void
+fcfs_scheduler(struct cpu *c)
+{
+  struct proc * np = 0;
+
+  for(struct proc * p = proc; p < &proc[NPROC]; p++) {
+    acquire(&p->lock);
+    if(p->state == RUNNABLE && p->pid > 2){
+      if (!np){
+        np = p;
+      }
+      else if(np->starttick >= p->starttick){
+        np = p;
+      }
+    }
+    release(&p->lock);
+  }
+
+  if(np){
+    acquire(&np->lock);
+    if(np->state == RUNNABLE){
+      np->state = RUNNING;
+      c->proc = np;
+      swtch(&c->context, &np->context);
+      c->proc = 0;
+    }
+    release(&np->lock);
+  }
+  else{
+
+    rr_scheduler(c);
+  }
+}
+
+// Per-CPU process scheduler.
+// Each CPU calls scheduler() after setting itself up.
+// Scheduler never returns.  It loops, doing:
+//  - choose a process to run.
+//  - swtch to start running that process.
+//  - eventually that process transfers control
+//    via swtch back to the scheduler.
+void
+scheduler(void)
+{
+  struct cpu *c = mycpu();
+  
+  c->proc = 0;
+  for(;;){
+    // Avoid deadlock by ensuring that devices can interrupt.
+    intr_on();
+
+    if(sched_type == ALG_RR){
+      rr_scheduler(c);
+    }
+    else if(sched_type == ALG_FCFS){
+        fcfs_scheduler(c);
     }
   }
 }
@@ -699,7 +747,7 @@ systeminfo(uint64 info)
   if (info != 0 && copyout(p->pagetable,info,(char*)&si,sizeof(si)) < 0)
     return -1;
   return 0;
-}
+} 
 
 // Copy to either a user address, or kernel address,
 // depending on usr_dst.

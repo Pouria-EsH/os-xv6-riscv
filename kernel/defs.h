@@ -189,3 +189,7 @@ void            virtio_disk_intr(void);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
+
+// scheduling algorithm
+typedef enum{ALG_RR,ALG_FCFS} sched_algorithms;
+extern sched_algorithms sched_type;
