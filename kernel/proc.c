@@ -148,6 +148,11 @@ found:
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
   
+  p->exittick = 0;
+  p->sleepticks = 0;
+  p->readyticks = 0;
+  p->runningticks = 0;
+
   // Save system ticks
   acquire(&tickslock);
   p->starttick = ticks;
@@ -384,6 +389,7 @@ exit(int status)
 
   p->xstate = status;
   p->state = ZOMBIE;
+  p->exittick = ticks;
 
   release(&wait_lock);
 
@@ -424,6 +430,71 @@ wait(uint64 addr)
           freeproc(pp);
           release(&pp->lock);
           release(&wait_lock);
+          return pid;
+        }
+        release(&pp->lock);
+      }
+    }
+
+    // No point waiting if we don't have any children.
+    if(!havekids || killed(p)){
+      release(&wait_lock);
+      return -1;
+    }
+    
+    // Wait for a child to exit.
+    sleep(p, &wait_lock);  //DOC: wait-sleep
+  }
+}
+
+int
+twait(uint64 addr,uint64 proc_time)
+{ 
+  struct proc *pp;
+  int havekids, pid;
+  struct proc *p = myproc();
+
+  acquire(&wait_lock);
+
+  for(;;){
+    // Scan through table looking for exited children.
+    havekids = 0;
+    for(pp = proc; pp < &proc[NPROC]; pp++){
+      if(pp->parent == p){
+        // make sure the child isn't still in exit() or swtch().
+        acquire(&pp->lock);
+
+        havekids = 1;
+        if(pp->state == ZOMBIE){
+          // Found one.
+
+          struct proctime cptime;
+
+          cptime.cpuburst_time = pp->runningticks;
+          cptime.turnaround_time = pp->exittick - pp->starttick;
+          cptime.waiting_time = pp->sleepticks;
+          
+          pid = pp->pid;
+          
+          if(addr != 0 && copyout(p->pagetable, addr, (char *)&pp->xstate,
+                                  sizeof(pp->xstate)) < 0) {
+            release(&pp->lock);
+            release(&wait_lock);
+            return -1;
+          }
+
+          if (proc_time != 0 && copyout(p->pagetable,proc_time,
+                                (char*)&cptime,sizeof(cptime)) < 0){
+            release(&pp->lock);
+            release(&wait_lock);
+            return -1;
+          }
+          
+          freeproc(pp);
+          release(&pp->lock);
+          release(&wait_lock);
+
+
           return pid;
         }
         release(&pp->lock);
@@ -519,7 +590,7 @@ scheduler(void)
       rr_scheduler(c);
     }
     else if(sched_type == ALG_FCFS){
-        fcfs_scheduler(c);
+      fcfs_scheduler(c);
     }
   }
 }
@@ -673,6 +744,26 @@ killed(struct proc *p)
   k = p->killed;
   release(&p->lock);
   return k;
+}
+
+void 
+updatetimes(void)
+{
+  struct proc* p;
+  for (p = proc; p < &proc[NPROC]; p++) {
+    acquire(&p->lock);
+    if (p->state == RUNNING) {
+      p->runningticks++;
+    }
+    else if(p->state == RUNNABLE){
+      p->readyticks++;
+    }
+    else if(p->state == SLEEPING)
+    {
+      p->sleepticks++;
+    }
+    release(&p->lock); 
+  }
 }
 
 int 
