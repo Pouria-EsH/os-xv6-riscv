@@ -470,9 +470,9 @@ twait(uint64 addr,uint64 proc_time)
 
           struct proctime cptime;
 
-          cptime.cpuburst_time = pp->runningticks;
-          cptime.turnaround_time = pp->exittick - pp->starttick;
-          cptime.waiting_time = pp->sleepticks;
+          cptime.cpuburst_time = (long)(pp->runningticks) / 10;
+          cptime.turnaround_time = (long)(pp->exittick - pp->starttick) / 10;
+          cptime.waiting_time = (long)(pp->sleepticks + pp->readyticks) /10;
           
           pid = pp->pid;
           

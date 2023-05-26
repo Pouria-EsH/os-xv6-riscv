@@ -107,3 +107,12 @@ sys_sysinfo(void)
   argaddr(0,&p); 
   return systeminfo(p);
 }
+uint64
+sys_twait(void)
+{
+  uint64 p;
+  argaddr(0, &p); 
+  uint64 ptime;
+  argaddr(1, &ptime); 
+  return twait(p,ptime);
+} 

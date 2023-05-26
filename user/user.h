@@ -1,6 +1,12 @@
 struct stat;
 struct sysinfo;
 
+struct proctime {
+  long cpuburst_time;
+  long turnaround_time;
+  long waiting_time;
+};
+
 // system calls
 int fork(void);
 int exit(int) __attribute__((noreturn));
@@ -25,6 +31,7 @@ int sleep(int);
 int uptime(void);
 int getProcTick(int);
 int sysinfo(struct sysinfo *);
+int twait(int*,struct proctime * );
 
 // ulib.c
 int stat(const char*, struct stat*);
