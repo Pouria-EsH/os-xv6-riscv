@@ -470,9 +470,9 @@ twait(uint64 addr,uint64 proc_time)
 
           struct proctime cptime;
 
-          cptime.cpuburst_time = (long)(pp->runningticks) / 10;
-          cptime.turnaround_time = (long)(pp->exittick - pp->starttick) / 10;
-          cptime.waiting_time = (long)(pp->sleepticks + pp->readyticks) /10;
+          cptime.cpuburst_time = (long)(pp->runningticks);
+          cptime.turnaround_time = (long)(pp->exittick - pp->starttick);
+          cptime.waiting_time = (long)(pp->sleepticks + pp->readyticks);
           
           pid = pp->pid;
           
@@ -898,4 +898,10 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+void
+changesched(sched_algorithms schedmode){
+
+sched_type=schedmode;
 }

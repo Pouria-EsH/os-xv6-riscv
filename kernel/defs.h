@@ -9,6 +9,10 @@ struct sleeplock;
 struct stat;
 struct superblock;
 
+// scheduling algorithm
+typedef enum{ALG_RR,ALG_FCFS} sched_algorithms;
+extern sched_algorithms sched_type;
+
 // bio.c
 void            binit(void);
 struct buf*     bread(uint, uint);
@@ -109,6 +113,7 @@ void            procdump(void);
 int             getProcTick(int pid);
 int             systeminfo(uint64 info);
 int             twait(uint64 addr,uint64 proc_time);
+void            changesched(sched_algorithms schedmode);
 void            updatetimes(void);
 
 // swtch.S
@@ -191,7 +196,3 @@ void            virtio_disk_intr(void);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
-
-// scheduling algorithm
-typedef enum{ALG_RR,ALG_FCFS} sched_algorithms;
-extern sched_algorithms sched_type;

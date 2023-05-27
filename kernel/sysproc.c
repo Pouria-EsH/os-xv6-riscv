@@ -116,3 +116,11 @@ sys_twait(void)
   argaddr(1, &ptime); 
   return twait(p,ptime);
 } 
+uint64
+sys_sched(void)
+{
+int schedmode;
+ argint(0,&schedmode);
+changesched(schedmode);
+return 0;
+}
