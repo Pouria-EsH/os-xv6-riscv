@@ -472,7 +472,7 @@ twait(uint64 addr,uint64 proc_time)
 
           cptime.cpuburst_time = (long)(pp->runningticks);
           cptime.turnaround_time = (long)(pp->exittick - pp->starttick);
-          cptime.waiting_time = (long)(pp->sleepticks + pp->readyticks);
+          cptime.waiting_time = (long)(pp->readyticks);
           
           pid = pp->pid;
           

@@ -46,9 +46,9 @@ int main(void){
             waiting_time += proctwait[i].waiting_time;
         }
     
-        printf("ALG_FCFS cpuburst_time:   %d Sec\n",cpuburst_time/32);
-        printf("ALG_FCFS turnaround_time: %d Sec\n", (long)turnaround_time/32);
-        printf("ALG_FCFS waiting_time:  %d Sec\n",(long)waiting_time/32);
+        printf("ALG_FCFS cpuburst_time:   %d ms\n",cpuburst_time*100/32);
+        printf("ALG_FCFS turnaround_time: %d ms\n", (long)turnaround_time*100/32);
+        printf("ALG_FCFS waiting_time:  %d ms\n",(long)waiting_time*100/32);
 
     }
 
@@ -96,9 +96,9 @@ int main(void){
         waiting_time2 += proctwait2[i].waiting_time;
         }
         printf("\n");
-        printf("ALG_RR cpuburst_time:   %d Sec\n",cpuburst_time2/32);
-        printf("ALG_RR turnaround_time: %d Sec\n", turnaround_time2/32);
-        printf("ALG_RR waiting_time:  %d Sec\n",waiting_time2/32);
+        printf("ALG_RR cpuburst_time:   %d ms\n",cpuburst_time2*100/32);
+        printf("ALG_RR turnaround_time: %d ms\n", turnaround_time2*100/32);
+        printf("ALG_RR waiting_time:  %d ms\n",waiting_time2*100/32);
 
     }
 
