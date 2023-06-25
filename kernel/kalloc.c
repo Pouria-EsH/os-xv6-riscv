@@ -67,14 +67,16 @@ krefinc(void *pa)
   
   acquire(&kref.lock);
 
-  if(kref.refs > NPROC){
+  if(kref.refs[indx] > NPROC){
     release(&kref.lock);
     panic("krefinc");
   }
   
   ret = ++kref.refs[indx] ;
   
-  releakrefsetse(&kref.lock);
+  release(&kref.lock);
+
+  return ret;
 }
 
 uint
@@ -85,9 +87,11 @@ krefdec(void *pa)
 
   acquire(&kref.lock);
   
-  ret = (kref.refs > 0) ? --kref.refs[indx] : kref.refs[indx];
+  ret = (kref.refs[indx] > 0) ? --kref.refs[indx] : kref.refs[indx];
   
   release(&kref.lock);
+
+  return ret;
 }
 
 // Free the page of physical memory pointed at by pa,
