@@ -1,10 +1,16 @@
 struct stat;
-struct sysinfo;
 
 struct proctime {
   long cpuburst_time;
   long turnaround_time;
   long waiting_time;
+};
+
+struct sysinfo {
+  long uptime;
+  unsigned long totalram;
+  unsigned long freeram;
+  unsigned short procs;
 };
 
 // scheduling algorithm

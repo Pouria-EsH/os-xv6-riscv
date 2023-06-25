@@ -9,6 +9,7 @@
 #include "riscv.h"
 #include "defs.h"
 
+void krefset(void *pa, uint64 refsnum);
 void freerange(void *pa_start, void *pa_end);
 
 extern char end[]; // first address after kernel.
@@ -43,11 +44,14 @@ freerange(void *pa_start, void *pa_end)
   char *p;
   p = (char*)PGROUNDUP((uint64)pa_start);
   for(; p + PGSIZE <= (char*)pa_end; p += PGSIZE)
+  {
+    krefset(p,0);
     kfree(p);
+  }
 }
 
 void
-krefset(void *pa,uint64 refsnum)
+krefset(void *pa, uint64 refsnum)
 {
   uint64 indx = FRAMEINDX(pa,end);
   
@@ -57,6 +61,19 @@ krefset(void *pa,uint64 refsnum)
   acquire(&kref.lock);
   kref.refs[indx] = refsnum;
   release(&kref.lock);
+}
+
+uint
+krefs(void *pa)
+{
+  uint ret;
+  uint64 indx = FRAMEINDX(pa,end);
+  
+  acquire(&kref.lock);
+  ret = kref.refs[indx];
+  release(&kref.lock);
+
+  return ret;
 }
 
 uint
@@ -71,7 +88,7 @@ krefinc(void *pa)
     release(&kref.lock);
     panic("krefinc");
   }
-  
+
   ret = ++kref.refs[indx] ;
   
   release(&kref.lock);
@@ -86,9 +103,7 @@ krefdec(void *pa)
   uint64 indx = FRAMEINDX(pa,end);
 
   acquire(&kref.lock);
-  
   ret = (kref.refs[indx] > 0) ? --kref.refs[indx] : kref.refs[indx];
-  
   release(&kref.lock);
 
   return ret;
@@ -107,7 +122,7 @@ kfree(void *pa)
     panic("kfree");
 
   // skip if there is another reference
-  if(krefdec(pa) > 0)
+  if(krefs(pa) > 0)
     return;
 
   // Fill with junk to catch dangling refs.
