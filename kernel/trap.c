@@ -90,7 +90,11 @@ usertrap(void)
       
       // unmap the old page 
       uvmunmap(p->pagetable, pg_start, 1, 0);
-      krefdec((void*)pa);
+      
+      if(krefs((void*)pa))
+        krefdec((void*)pa);
+      else
+        kfree((void*)pa);
 
       if(mappages(p->pagetable, pg_start, PGSIZE, (uint64)mem, flags) != 0){
         printf("usertrap(): failed to map page\n");
